@@ -23,3 +23,35 @@ test("command upper tranforms message into UPPERCASE", async () => {
     assert.equal(response.body, expected)
 
 })
+
+test("command upper tranforms message into LOWERCASE", async () => {
+    const app = createServer()
+    const msg = 'MAKE THIS MESSAGE LOWER PLEASE!'
+    const expected = msg.toLowerCase()
+
+    const response = await app.inject({
+        method: 'POST',
+        url: '/chat',
+        body: { question: msg }
+    })
+
+    assert.equal(response.statusCode, 200)
+    assert.equal(response.body, expected)
+
+})
+
+test("command upper tranforms message into UNKNOWN", async () => {
+    const app = createServer()
+    const msg = 'Make There'
+    const expected = msg.toLowerCase()
+
+    const response = await app.inject({
+        method: 'POST',
+        url: '/chat',
+        body: { question: msg }
+    })
+
+    assert.equal(response.statusCode, 200)
+    assert.equal(response.body, expected)
+
+})
