@@ -43,7 +43,7 @@ test("command upper tranforms message into LOWERCASE", async () => {
 test("command upper tranforms message into UNKNOWN", async () => {
     const app = createServer()
     const msg = 'Make There'
-    const expected = msg.toLowerCase()
+    const expected = "Unknown command. Try 'make this uppercase' or 'convert to lowercase'"
 
     const response = await app.inject({
         method: 'POST',

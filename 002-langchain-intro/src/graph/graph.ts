@@ -11,6 +11,7 @@ import { identifyIntent } from './nodes/identifyIntentNode.ts'
 import { chatResponseNode } from './nodes/chatResponseNode.ts'
 import { upperCaseNode } from './nodes/upperCaseNode.ts'
 import { lowerCaseNode } from './nodes/lowerCaseNode.ts'
+import { fallbackNode } from './nodes/fallbackNode.ts'
 
 
 const GraphState = z.object({
@@ -31,6 +32,7 @@ export function buildGraph() {
         .addNode("chatResponse", chatResponseNode)
         .addNode('upperCase', upperCaseNode)
         .addNode('lowerCase', lowerCaseNode)
+        .addNode('fallback', fallbackNode)
         .addConditionalEdges("identifyIntent", (state: GraphState) => {
             switch (state.command) {
                 case 'uppercase':
@@ -44,7 +46,7 @@ export function buildGraph() {
         {
             'upperCase': 'upperCase',
             'lowerCase': 'lowerCase',
-            //'fallback': 'fallback'
+            'fallback': 'fallback'
         }
        )
        /*
@@ -58,6 +60,7 @@ export function buildGraph() {
         .addEdge(START, "identifyIntent")
         .addEdge("upperCase", "chatResponse")
         .addEdge("lowerCase", "chatResponse")
+        .addEdge("fallback", "chatResponse")
         .addEdge("chatResponse", END)
 
     return workflow.compile()
