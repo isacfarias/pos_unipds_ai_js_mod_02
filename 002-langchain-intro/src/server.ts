@@ -1,6 +1,10 @@
 import Fastify from "fastify";
+import { buildGraph } from "./graph/graph.ts";
+import { HumanMessage } from "langchain";
 
-export const createServer = ( ) => {
+const graph = buildGraph()
+
+export const createServer = () => {
     const app = Fastify({ logger: false })
 
     app.post('/chat', {
@@ -16,13 +20,17 @@ export const createServer = ( ) => {
     }, async (request, reply) => {
         try {
             const { question } = request.body as { question: string }
-                       return reply.send(question)
+
+            const response = await graph.invoke({
+                messages: [new HumanMessage(question)]
+            })
+
+            return reply.send(response.output)
         } catch (error) {
             console.error('Error handiling /chat request:', error)
             return reply.code(500)
         }
-    }
-  )
+    })
 
-  return app
+    return app
 }
