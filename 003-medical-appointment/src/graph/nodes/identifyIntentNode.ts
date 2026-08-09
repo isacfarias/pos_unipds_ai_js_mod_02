@@ -25,7 +25,7 @@ export function createIdentifyIntentNode(llmClient: LLMService) {
       }
 
       const intentData = result.data!
-      console.log(`Intent identification: ${intentData.intent}`)
+      console.log(`⚠️ Intent identification: ${intentData.intent}`)
       return {
         ...intentData
       };

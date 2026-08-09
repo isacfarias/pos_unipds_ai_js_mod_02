@@ -9,7 +9,7 @@ import type { BaseMessage } from '@langchain/core/messages';
 
 import { createSchedulerNode } from './nodes/schedulerNode.ts';
 import { createCancellerNode } from './nodes/cancellerNode.ts';
-import { createIdentifyIntentNode} from "./nodes/identifyIntentNode.ts";
+import { createIdentifyIntentNode } from "./nodes/identifyIntentNode.ts";
 import { createMessageGeneratorNode } from "./nodes/messageGeneratorNode.ts";
 
 import { z } from "zod/v3";
@@ -39,7 +39,7 @@ const AppointmentStateAnnotation = z.object({
 export type GraphState = z.infer<typeof AppointmentStateAnnotation>;
 
 export function buildAppointmentGraph(
-  llmClient: LLMService, 
+  llmClient: LLMService,
   appoinmentService: AppointmentService
 ) {
 
@@ -49,8 +49,8 @@ export function buildAppointmentGraph(
     stateSchema: AppointmentStateAnnotation,
   })
     .addNode('identifyIntent', createIdentifyIntentNode(llmClient))
-    .addNode('schedule', createSchedulerNode())
-    .addNode('cancel', createCancellerNode())
+    .addNode('schedule', createSchedulerNode(appoinmentService))
+    .addNode('cancel', createCancellerNode(appoinmentService))
     .addNode('message', createMessageGeneratorNode())
 
     // Flow
