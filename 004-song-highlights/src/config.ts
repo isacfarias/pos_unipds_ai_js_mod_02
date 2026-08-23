@@ -16,6 +16,7 @@ export type ModelConfig = {
   memory: {
     dbUri: string;
   };
+  maxMessagesToSummary: number
 };
 
 console.assert(process.env.OPENROUTER_API_KEY, 'OPENROUTER_API_KEY is not set in environment variables');
@@ -26,7 +27,8 @@ export const config: ModelConfig = {
   xTitle: 'IA Devs - Prompt Chaining Article Generator',
   models: [
     // https://openrouter.ai/models?fmt=cards&max_price=0&order=throughput-high-to-low&supported_parameters=structured_outputs%2Cresponse_format
-    'nvidia/nemotron-nano-9b-v2:free',
+    //'google/gemma-4-26b-a4b-it:free',
+    'poolside/laguna-xs-2.1:free',
 
   ],
   provider: {
@@ -38,5 +40,6 @@ export const config: ModelConfig = {
   temperature: 0.7,
   memory: {
     dbUri: 'postgresql://postgres:mysecretpassword@localhost:5432/song_recommender',
-  }
+  },
+  maxMessagesToSummary: 6
 };

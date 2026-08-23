@@ -3,11 +3,14 @@ import { LLMModelService } from '../../services/llmModelService.ts';
 import type { GraphState } from '../graph.ts';
 import { ChatResponseSchema, getSystemPrompt, getUserPromptTemplate } from '../../prompts/v1/chatResponse.ts';
 import { AIMessage, HumanMessage } from 'langchain';
+import { PreferencesService } from '../../services/preferencesService.ts';
+import { config } from '../../config.ts';
 
-export function createChatNode(llmClient: LLMModelService) {
+export function createChatNode(llmClient: LLMModelService, preferencesService: PreferencesService) {
   return async (state: GraphState, runtime?: Runtime): Promise<Partial<GraphState>> => {
 
-    const userContext = ''
+    const userId = String(runtime?.context?.userId || state.userId || 'unknown')
+    const userContext = state.userContext ?? await preferencesService.getBasicInfo(userId)
     const systemPrompt = getSystemPrompt(userContext)
 
     const conversationHistory = state.messages
@@ -27,7 +30,7 @@ export function createChatNode(llmClient: LLMModelService) {
 
 
     if (!result.success || !result.data) {
-      console.error(' Falha ao gerar resposta:', result.error)
+      console.error('❌ Falha ao gerar resposta:', result.error);
       return {
         messages: [
           new AIMessage('Desculpe, encontrei um erro. Pode tentar novamente?')
@@ -35,14 +38,15 @@ export function createChatNode(llmClient: LLMModelService) {
       }
     }
 
-
     const response = result.data
+    const totalMessages = state.messages.length
+    const needsSummarization = totalMessages >= config.maxMessagesToSummary
     return {
       messages: [
         new AIMessage(response.message)
       ],
       extractedPreferences: response.shouldSavePreferences ? response.preferences : undefined,
-      needsSummarization: false
+      needsSummarization
     };
   };
 }

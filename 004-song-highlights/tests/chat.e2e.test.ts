@@ -6,36 +6,38 @@ import { unlinkSync, existsSync } from 'node:fs';
 
 describe('Chat de Recomendação Musical - Testes E2E', () => {
   let graph: any;
-  let memoryService: any;
-  const testDbPath = './test-memory.db';
+  let preferencesService: any;
+  const testDbPath = './test-preferences.db';
 
   before(async () => {
     if (existsSync(testDbPath)) {
       unlinkSync(testDbPath);
     }
 
-    const built = await buildGraph();
+    const built = await buildGraph(testDbPath);
     graph = built.graph;
-    memoryService = built.memoryService;
+    preferencesService = built.preferencesService;
   });
 
   after(async () => {
+    await preferencesService.close();
     if (existsSync(testDbPath)) {
       unlinkSync(testDbPath);
     }
   });
 
   it('Deve extrair e salvar preferências do usuário', async () => {
-    const testThreadId = `test-user-${Date.now()}`;
+    const userId = 'test-alex';
+    const threadId = `${userId}-${Date.now()}`;
     const config = {
-      configurable: { thread_id: testThreadId },
-      context: { userId: testThreadId }
+      configurable: { thread_id: threadId },
+      context: { userId }
     };
 
     const response = await graph.invoke(
       {
         messages: [new HumanMessage('Oi! Meu nome é Alex e eu amo rock e metal')],
-        userId: testThreadId,
+        userId,
       },
       config
     );
@@ -53,26 +55,28 @@ describe('Chat de Recomendação Musical - Testes E2E', () => {
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const namespace = ['memories', testThreadId];
-    const savedMemories = await memoryService.store.search(namespace, { limit: 10 });
+    const savedPreferences = await preferencesService.getSummary(userId);
 
-    assert.ok(savedMemories.length > 0, 'Preferências devem estar salvas');
-
-    const memoriesText = savedMemories.map((m: any) => m.value.data).join(' ');
-    assert.ok(memoriesText.includes('Alex'), 'Nome deve estar salvo');
+    assert.ok(savedPreferences, 'Preferências devem estar salvas');
+    assert.ok(savedPreferences.name?.toLowerCase().includes('alex'), 'Nome deve estar salvo');
+    assert.ok(
+      savedPreferences.favoriteGenres?.some((g: string) => g.toLowerCase().includes('rock') || g.toLowerCase().includes('metal')),
+      'Gêneros devem estar salvos'
+    );
   });
 
   it('Deve manter múltiplas trocas e fazer sumarização', async () => {
-    const testThreadId = `test-user-${Date.now()}`;
+    const userId = 'test-sarah';
+    const threadId = `${userId}-${Date.now()}`;
     const config = {
-      configurable: { thread_id: testThreadId },
-      context: { userId: testThreadId }
+      configurable: { thread_id: threadId },
+      context: { userId }
     };
 
     await graph.invoke(
       {
         messages: [new HumanMessage('Oi! Sou a Sarah e adoro indie e eletrônica')],
-        userId: testThreadId,
+        userId,
       },
       config
     );
@@ -80,69 +84,68 @@ describe('Chat de Recomendação Musical - Testes E2E', () => {
     const response2 = await graph.invoke(
       {
         messages: [new HumanMessage('Gosto especialmente de Tame Impala e Daft Punk')],
-        userId: testThreadId,
+        userId,
       },
       config
     );
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const namespace = ['memories', testThreadId];
-    const savedMemories = await memoryService.store.search(namespace, { limit: 10 });
+    const savedPreferences = await preferencesService.getSummary(userId);
 
-    assert.ok(savedMemories.length > 0, 'Memórias devem existir');
-
-    const memoriesText = savedMemories.map((m: any) => m.value.data.toLowerCase()).join(' ');
-    assert.ok(memoriesText.includes('sarah'), 'Nome deve estar salvo');
+    assert.ok(savedPreferences, 'Memórias devem existir');
+    assert.ok(savedPreferences.name?.toLowerCase().includes('sarah'), 'Nome deve estar salvo');
     assert.ok(
-      memoriesText.includes('indie') || memoriesText.includes('eletrônica') || memoriesText.includes('electronic'),
+      savedPreferences.favoriteGenres?.some((g: string) =>
+        g.toLowerCase().includes('indie') || g.toLowerCase().includes('eletrônica') || g.toLowerCase().includes('electronic')
+      ),
       'Gêneros devem estar salvos'
     );
   });
 
   it('Deve recuperar contexto em nova sessão', async () => {
-    const testThreadId = `test-user-${Date.now()}`;
+    const userId = 'test-marcus';
+    const threadId = `${userId}-${Date.now()}`;
     const config = {
-      configurable: { thread_id: testThreadId },
-      context: { userId: testThreadId }
+      configurable: { thread_id: threadId },
+      context: { userId }
     };
 
     await graph.invoke(
       {
         messages: [new HumanMessage('Meu nome é Marcus, tenho 28 anos e adoro jazz e blues')],
-        userId: testThreadId,
+        userId,
       },
       config
     );
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const namespace = ['memories', testThreadId];
-    const savedMemories = await memoryService.store.search(namespace, { limit: 10 });
+    const savedPreferences = await preferencesService.getSummary(userId);
 
-    assert.ok(savedMemories.length > 0, 'Deve recuperar informações básicas');
-
-    const memoriesText = savedMemories.map((m: any) => m.value.data).join(' ');
-    assert.ok(memoriesText.includes('Marcus'), 'Deve incluir nome');
-    assert.ok(memoriesText.includes('28'), 'Deve incluir idade');
+    assert.ok(savedPreferences, 'Deve recuperar informações básicas');
+    assert.ok(savedPreferences.name?.includes('Marcus'), 'Deve incluir nome');
+    assert.ok(savedPreferences.age === 28, 'Deve incluir idade');
     assert.ok(
-      memoriesText.toLowerCase().includes('jazz') ||
-      memoriesText.toLowerCase().includes('blues'),
+      savedPreferences.favoriteGenres?.some((g: string) =>
+        g.toLowerCase().includes('jazz') || g.toLowerCase().includes('blues')
+      ),
       'Deve incluir gêneros'
     );
   });
 
   it('Deve responder perguntas simples sem extrair preferências', async () => {
-    const testThreadId = `test-user-${Date.now()}`;
+    const userId = 'test-anonymous';
+    const threadId = `${userId}-${Date.now()}`;
     const config = {
-      configurable: { thread_id: testThreadId },
-      context: { userId: testThreadId }
+      configurable: { thread_id: threadId },
+      context: { userId }
     };
 
     const response = await graph.invoke(
       {
         messages: [new HumanMessage('Qual é sua música favorita?')],
-        userId: testThreadId,
+        userId,
       },
       config
     );

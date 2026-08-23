@@ -35,15 +35,26 @@
   "dependencies": {
     "@huggingface/inference": "^4.13.12",
     "@huggingface/transformers": "^3.8.1",
-    "@langchain/community": "^1.1.14",
+    "@langchain/community": "^0.3.20",
     "@langchain/core": "^1.1.22",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.0",
     "@langchain/langgraph-checkpoint-sqlite": "^1.0.1",
     "@libsql/client": "^0.17.0",
     "@openrouter/sdk": "^0.8.0",
-    "@xenova/transformers": "^2.17.2",
+    "@xenova/transformers": "^1.4.2",
     "better-sqlite3": "^11.10.0",
     "knex": "^3.1.0",
     "langchain": "^1.2.21"
+  },
+  "allowScripts": {
+    "@openrouter/sdk@0.8.0": true,
+    "onnxruntime-node@1.21.0": true,
+    "protobufjs@7.6.5": true,
+    "sharp@0.34.5": true,
+    "better-sqlite3@12.6.2": true,
+    "sharp@0.32.6": true,
+    "better-sqlite3@11.10.0": true,
+    "protobufjs@6.11.6": true,
+    "canvas@2.11.2": true
   }
 }
