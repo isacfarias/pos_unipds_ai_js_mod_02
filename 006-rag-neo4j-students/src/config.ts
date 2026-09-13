@@ -3,7 +3,11 @@ export const config = {
   httpReferer: '',
   xTitle: 'IA Devs - Sales Analytics Reporter',
   models: [
-    'arcee-ai/trinity-large-preview:free',
+    //'arcee-ai/trinity-large-preview:free',
+    //'poolside/laguna-xs-2.1:free',
+    // 'nvidia/llama-nemotron-rerank-vl-1b-v2:free',
+    'nvidia/nemotron-3-ultra-550b-a55b:free'
+
   ],
   provider: {
     sort: {
